@@ -18,9 +18,9 @@ usage="usage: ./setup [ubuntu|mac]"
 if [ $# -ne 1 ]; then
   echo $usage
   exit
-elif ! [ "$1" == "ubuntu" ] || [ "$1" == "mac" ]; then
-  echo $usage
-  exit
+# elif ! [ "$1" == "ubuntu" ] || [ "$1" == "mac" ]; then
+#   echo $usage
+#   exit
 fi
 os="$1"
 

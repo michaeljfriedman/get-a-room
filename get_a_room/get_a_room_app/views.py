@@ -8,4 +8,5 @@ def index(request):
     '''
     rooms = Room.objects.all()
     occupancies = Occupancy.objects.all()
-    return render(request, 'get_a_room_app/index.html', {'rooms': rooms, 'occupancies': occupancies})
+    #return render(request, 'get_a_room_app/index.html', {'rooms': rooms, 'occupancies': occupancies})
+    return render(request, 'get_a_room_app/map.html',{})
