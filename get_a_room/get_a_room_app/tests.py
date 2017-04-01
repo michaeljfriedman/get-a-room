@@ -1,3 +1,4 @@
+import datetime
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
@@ -59,7 +60,7 @@ class RoomModelTests(TestCase):
         insert.
         '''
         room = create_room(capacity=-1)
-        self.assertRaises(IntegrityError, room.save)
+        self.assertRaises(ValueError, room.save)
 
     '''
     The following tests attempt to insert entries with missing attributes, and
@@ -91,7 +92,7 @@ class OccupancyModelTests(TestCase):
         occupancy.save()
 
         test_occupancy = Occupancy.objects.order_by('-id')[0]
-        self.assertEqual(test_occupancy, offering)
+        self.assertEqual(test_occupancy, occupancy)
 
     def test_insert_with_timestamp_in_the_future(self):
         '''
@@ -107,7 +108,7 @@ class OccupancyModelTests(TestCase):
         that it fails to insert.
         '''
         occupancy = create_occupancy(room=create_room())
-        self.assertRaises(IntegrityError, occupancy.save)
+        self.assertRaises(ValueError, occupancy.save)
 
     def test_insert_with_negative_occupancy(self):
         '''

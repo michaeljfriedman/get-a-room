@@ -39,6 +39,14 @@ pip install Django==1.10.6
 echo "Done!"
 echo
 
+# Initialize database
+echo "Initializing database..."
+cd get_a_room
+python setup_database.py
+cd ..
+echo "Done!"
+echo
+
 deactivate
 
 echo "Remember to activate the Python virtual environment by running 'source venv/bin/activate' to use the installed dependencies. Run 'deactivate' to disable the environment when finished working."
