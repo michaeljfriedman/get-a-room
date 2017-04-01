@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# setup
+# Author: Michael Friedman
+# Usage: ./setup [ubuntu|mac]
+#
+# Sets up your environment with the necessary dependencies to work on this
+# project, and initializes the database. As more dependencies become required,
+# update this script to install them.
+#
+# Note: At the moment, this does not use the OS to differentiate the setup
+# process. However, later on, I envision that there might be packages
+# installed via apt-get on ubuntu and brew on mac. So I included the argument
+# for future-proofing.
+
+# Validate usage
+usage="usage: ./setup [ubuntu|mac]"
+if [ $# -ne 1 ]; then
+  echo $usage
+  exit
+elif ! [ "$1" == "ubuntu" ] || [ "$1" == "mac" ]; then
+  echo $usage
+  exit
+fi
+os="$1"
+
+# Set up python virtual environment
+if [ ! -d "venv" ]; then
+  echo "Setting up Python virutal environment..."
+  virtualenv venv
+  echo "Done!"
+  echo
+fi
+source venv/bin/activate
+
+# Download dependencies
+echo "Downloading dependencies..."
+pip install Django==1.10.6
+echo "Done!"
+echo
+
+deactivate
+
+echo "Remember to activate the Python virtual environment by running 'source venv/bin/activate' to use the installed dependencies. Run 'deactivate' to disable the environment when finished working."
