@@ -14,12 +14,17 @@ class IndexViewTests(TestCase):
     Tests for the index (landing) page
     '''
 
-    def test_index_page_loads_hello_world(self):
+    def test_index_page_loads_database_contents(self):
         '''
-        Tests that the index page loads with content "Hello world!"
+        Tests that the index page loads with database contents.
         '''
         response = self.client.get(reverse('get_a_room_app:index'))
-        self.assertEqual(response.content, 'Hello world!')
+        rooms = Room.objects.all()
+        for room in rooms:
+            self.assertContains(response.content, str(room))
+        occupancies = Occupancy.objects.all()
+        for occupancy in occupancies:
+            self.assertContains(response.content, str(occupancy))
 
 #-------------------------------------------------------------------------------
 

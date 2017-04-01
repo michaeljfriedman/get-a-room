@@ -1,0 +1,19 @@
+<h1>Database Contents</h1>
+
+<h2>Room table</h2>
+{% if rooms %}
+  <ul>
+  {% for room in rooms %}
+    <li>{{ room }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
+<h2>Occupancies table</h2>
+{% if occupancies %}
+  <ul>
+  {% for occupancy in occupancies %}
+    <li>{{ occupancy }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
