@@ -91,3 +91,6 @@ ENV/
 # Sublime Text stuff
 *.sublime-project
 *.sublime-workspace
+
+# SQLite
+*.sqlite3
