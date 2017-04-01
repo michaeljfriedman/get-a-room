@@ -1,5 +1,12 @@
+from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+from get_a_room_app.models import Occupancy, Room
+
+#-------------------------------------------------------------------------------
+
+### View tests
 
 class IndexViewTests(TestCase):
     '''
@@ -12,3 +19,124 @@ class IndexViewTests(TestCase):
         '''
         response = self.client.get(reverse('get_a_room_app:index'))
         self.assertEqual(response.content, 'Hello world!')
+
+#-------------------------------------------------------------------------------
+
+### Database tests
+
+'''
+Helper methods for tests. Return a valid Room/Occupancy entries, but do not place them in their corresponding table. i.e. the caller must save() them
+afterwards.
+'''
+def create_room(building='Frist Campus Center', number='302', capacity=50):
+    return Room(building=building, number=number, capacity=capacity)
+
+def create_occupancy(timestamp=timezone.now(), room=0, occupancy=25):
+    if room == 0:
+        room = create_room()
+        room.save()
+    return Occupancy(timestamp=timestamp, room=room, occupancy=occupancy)
+
+
+class RoomModelTests(TestCase):
+    '''
+    Tests for Room table in the database.
+    '''
+
+    def test_insert_valid_entry(self):
+        '''
+        Insets a valid entry, and tests that its contents are correct.
+        '''
+        room = create_room()
+        room.save()
+
+        test_room = Room.objects.order_by('-id')[0]
+        self.assertEqual(test_room, room)
+
+    def test_insert_with_negative_capacity(self):
+        '''
+        Inserts an entry with negative capacity, and tests that it fails to
+        insert.
+        '''
+        room = create_room(capacity=-1)
+        self.assertRaises(IntegrityError, room.save)
+
+    '''
+    The following tests attempt to insert entries with missing attributes, and
+    test that the insertion fails.
+    '''
+    def test_insert_with_no_building(self):
+        room = create_room(building=None)
+        self.assertRaises(IntegrityError, room.save)
+
+    def test_insert_with_no_number(self):
+        room = create_room(number=None)
+        self.assertRaises(IntegrityError, room.save)
+
+    def test_insert_with_no_capacity(self):
+        room = create_room(capacity=None)
+        self.assertRaises(IntegrityError, room.save)
+
+
+class OccupancyModelTests(TestCase):
+    '''
+    Tests for Occupancy table in the database.
+    '''
+
+    def test_insert_valid_entry(self):
+        '''
+        Inserts a valid entry and tests that it has the right contents.
+        '''
+        occupancy = create_occupancy()
+        occupancy.save()
+
+        test_occupancy = Occupancy.objects.order_by('-id')[0]
+        self.assertEqual(test_occupancy, offering)
+
+    def test_insert_with_timestamp_in_the_future(self):
+        '''
+        Inserts an entry with a timestamp in the future, and tests that it
+        fails to insert.
+        '''
+        occupancy = create_occupancy(timestamp=timezone.now() + datetime.timedelta(days=30))
+        self.assertRaises(ValueError, occupancy.save)
+
+    def test_insert_with_nonexistent_room(self):
+        '''
+        Inserts an entry with a room that is not in the Room table, and tests
+        that it fails to insert.
+        '''
+        occupancy = create_occupancy(room=create_room())
+        self.assertRaises(IntegrityError, occupancy.save)
+
+    def test_insert_with_negative_occupancy(self):
+        '''
+        Inserts an entry with a negative value for occupancy, and tests that
+        it fails to insert.
+        '''
+        occupancy = create_occupancy(occupancy=-1)
+        self.assertRaises(ValueError, occupancy.save)
+
+    def test_insert_with_occupancy_greater_than_capacity(self):
+        '''
+        Inserts an entry with a value for occupancy greater than the total
+        capacity of the room, and tests that it fails to insert.
+        '''
+        occupancy = create_occupancy(occupancy=51)
+        self.assertRaises(ValueError, occupancy.save)
+
+    '''
+    The following tests attempt to insert entries with missing attributes, and
+    test that the insertion fails.
+    '''
+    def test_insert_with_no_timestamp(self):
+        occupancy = create_occupancy(timestamp=None)
+        self.assertRaises(IntegrityError, occupancy.save)
+
+    def test_insert_with_no_room(self):
+        occupancy = create_occupancy(room=None)
+        self.assertRaises(IntegrityError, occupancy.save)
+
+    def test_insert_with_no_occupancy(self):
+        occupancy = create_occupancy(occupancy=None)
+        self.assertRaises(IntegrityError, occupancy.save)
