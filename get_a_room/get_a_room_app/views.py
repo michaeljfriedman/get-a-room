@@ -6,8 +6,6 @@ def index(request):
     Sample view to demonstrate end-to-end flow of data. Displays the
     Room and Occupancy tables' raw contents.
     '''
-    rooms = Room.objects.all()
-    occupancies = Occupancy.objects.all()
     return render(request, 'index.html',{})
 
 def slide_panel(request, building):
@@ -30,3 +28,11 @@ def slide_panel_test(request):
     you can click to open a slide panel with building stats.
     '''
     return render(request, 'slide-panel-test.html', {})
+
+def test(request):
+    '''
+    Test view to display the raw database contents
+    '''
+    rooms = Room.objects.all()
+    occupancies = Occupancy.objects.all()
+    return render(request, 'test.html', {'occupancies': occupancies, 'rooms': rooms})

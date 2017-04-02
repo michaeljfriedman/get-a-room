@@ -42,7 +42,7 @@ echo
 # Initialize database
 echo "Initializing database..."
 cd get_a_room
-python setup_database.py
+python setup_database.py -p
 cd ..
 echo "Done!"
 echo

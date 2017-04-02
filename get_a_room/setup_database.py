@@ -42,18 +42,20 @@ print 'Done!'
 # Populate database with sample contents
 if populate:
     print 'Populating database with sample data...'
-    import datetime
-    from django.utils import timezone
     from get_a_room_app.models import Occupancy, Room
+    from random import randint
 
-    frist_302 = Room(building='Frist Campus Center', number='302', capacity=100)
-    frist_302.save()
-
-    start_time = timezone.now() + datetime.timedelta(days=-1)
-    occupancies = [
-        Occupancy(timestamp=start_time + datetime.timedelta(minutes=t),
-            room=frist_302, occupancy=100 - 2*t) for t in range(0, 30)
-    ]
-    for occupancy in occupancies:
-        occupancy.save()
+    f = open('ap-to-room.txt', 'r')
+    lines = [line.strip() for line in f.readlines()]
+    nums = [line.split()[1] for line in lines]
+    print nums
+    print
+    print 'Populating rooms...'
+    for num in nums:
+        room = Room(
+            building='frist-campus-center',
+            number=int(num),
+            capacity=randint(50, 100)
+        )
+        room.save()
     print 'Done!'
