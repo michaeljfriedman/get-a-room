@@ -9,3 +9,23 @@ def index(request):
     rooms = Room.objects.all()
     occupancies = Occupancy.objects.all()
     return render(request, 'index.html',{})
+
+def slide_panel(request, building):
+    '''
+    Responds with the HTML for the slide panel, populated with data for
+    'building'
+    '''
+    occupancies = Occupancy.objects.filter(room__building=building)
+
+    # Format building name
+    building_pieces = [piece[0].upper() + piece[1:] for piece in building.split('-')]
+    building = ' '.join(building_pieces)
+
+    return render(request, 'slide-panel.html', {'building': building, 'occupancies': occupancies})
+
+def slide_panel_test(request):
+    '''
+    Sample view to demonstrate the slide panel. Displays a button
+    you can click to open a slide panel with building stats.
+    '''
+    return render(request, 'slide-panel-test.html', {})

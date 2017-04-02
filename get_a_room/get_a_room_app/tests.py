@@ -20,6 +20,24 @@ class IndexViewTests(TestCase):
         '''
         pass # TODO: Implement this
 
+class SlidePanelViewTests(TestCase):
+    '''
+    Tests for retrieving data and populating them into the slide panel.
+    '''
+
+    def test_slide_panel_loads_building_contents(self):
+        '''
+        Loads the slide panel view and checks that the building stats are
+        in it.
+        '''
+        response = self.client.get(reverse('get_a_room_app:slide-panel', kwargs={'building': 'frist-campus-center'}))
+        occupancies = Occupancy.objects.filter(room__building='frist-campus-center')
+        for occupancy in occupancies:
+            self.assertContains(response.content, str(occupancy.room.building))
+            self.assertContains(response.content, str(occupancy.room.number))
+            self.assertContains(response.content, str(occupancy.occupancy))
+            self.assertContains(response.content, str(occupancy.room.capacity))
+
 #-------------------------------------------------------------------------------
 
 ### Database tests
