@@ -34,6 +34,7 @@ function onEachFeature(feature, layer) {
                 map.closePopup();
                 var building = feature.properties.popupContent;
                 setMapView(building);
+                // map.addLayer(layers.tiles).addLayer(layers.places);
             }
     });
 }
@@ -55,7 +56,7 @@ function setMapView(building) {
         var target = this;
         return target.split(search).join(replacement);
     };
-
+    // map.removeLayer(layers.tiles).removeLayer(layers.places);
     $.slidePanel.show({
         url: 'http://localhost:8000/slide-panel/' + building.replaceAll(' ', '-').toLowerCase(),
         settings: {

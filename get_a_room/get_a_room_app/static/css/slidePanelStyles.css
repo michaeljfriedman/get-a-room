@@ -6,9 +6,11 @@
 
 /* Applied once panel has loaded */
 .slidePanel {
-  padding: 20px;
+  padding-top: 50px;
   color: #000000;
   background-color: #FFFFFF;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 table {
