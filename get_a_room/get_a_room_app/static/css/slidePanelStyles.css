@@ -1,0 +1,21 @@
+/* slidePanelSytles.css
+ * Author: Michael Friedman
+ *
+ * Our custom styles applied to the slide panel
+ */
+
+/* Applied once panel has loaded */
+.slidePanel {
+  padding: 20px;
+  color: #000000;
+  background-color: #FFFFFF;
+}
+
+table {
+  width: 100%;
+}
+
+.my-wrapper {
+  overflow: auto;
+  height: 500px;
+}

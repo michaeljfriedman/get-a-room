@@ -1,0 +1,32 @@
+<!-- This page demonstrates the slide panel on a sample building. Click the
+  button to slide in the panel -->
+<!doctype html>
+<html class="no-js">
+{% load static %}
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Slide Panel Test</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
+  <link rel="stylesheet" href="{% static 'css/spinner.css' %}">
+  <link rel="stylesheet" href="{% static 'css/slidePanel.css' %}">
+  <link rel="stylesheet" href="{% static 'css/slidePanelStyles.css' %}">
+</head>
+
+<body>
+  <div id="wrapper">
+    <!-- This button opens a sample side panel with data from Frist 302 -->
+    <h2>Slide Panel Test</h2>
+    <button class="sample-button">Click to open the panel</button>
+  </div>
+
+  <!-- Load scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="{% static 'js/prism.js' %}"></script>
+  <script src="{% static 'js/jquery-slidePanel.min.js' %}"></script>
+  <script src="{% static 'js/slidePanel.js' %}"></script>
+</body>
+
+</html>
