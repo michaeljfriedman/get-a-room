@@ -27,9 +27,9 @@ function onEachFeature(feature, layer) {
             'mouseover': setHover.bind(layer),
             'mouseout': removeHover.bind(layer),
              'click': function(e) {
-                // TODO michael
                 map.closePopup();
-                setMapView();
+                var building = feature.properties.popupContent;
+                setMapView(building);
             }
     });
 }
@@ -45,9 +45,31 @@ function setHover(e) {
     });
 }
 
-function setMapView() {
+function setMapView(building) {
+    // Helper function for replacing all occurrences of spaces with hyphens
+    // in building name
+    String.prototype.replaceAll = function(search, replacement) {
+        var target = this;
+        return target.split(search).join(replacement);
+    };
 
-  // TODO michael
+    $.slidePanel.show({
+        url: 'http://localhost:8000/slide-panel/' + building.replaceAll(' ', '-').toLowerCase(),
+        settings: {
+            method: 'GET'
+        }
+    }, {
+        direction: 'right',
+        closeSelector: '.close',
+        useCssTransforms3d: true,
+        useCssTransforms: true,
+        useCssTransitions: true,
+        loading: {
+            template: function(options) {
+                return '<div class="' + options.classes.loading + '"><div class="spinner"></div></div>';
+            }
+        }
+    });
 }
 function removeHover(e) {
     map.closePopup();
