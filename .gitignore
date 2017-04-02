@@ -94,3 +94,4 @@ ENV/
 
 # SQLite
 *.sqlite3
+.DS_Store
