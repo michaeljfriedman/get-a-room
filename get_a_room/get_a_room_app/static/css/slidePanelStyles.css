@@ -10,3 +10,12 @@
   color: #000000;
   background-color: #FFFFFF;
 }
+
+table {
+  width: 100%;
+}
+
+.my-wrapper {
+  overflow: auto;
+  height: 500px;
+}

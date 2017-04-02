@@ -15,7 +15,8 @@ def slide_panel(request, building):
     Responds with the HTML for the slide panel, populated with data for
     'building'
     '''
-    occupancies = Occupancy.objects.filter(room__building=building)
+    most_recent_timestamp = Occupancy.objects.order_by('-timestamp')[0].timestamp
+    occupancies = Occupancy.objects.filter(timestamp=most_recent_timestamp, room__building=building)
 
     # Format building name
     building_pieces = [piece[0].upper() + piece[1:] for piece in building.split('-')]

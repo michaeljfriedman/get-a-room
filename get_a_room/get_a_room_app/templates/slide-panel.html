@@ -1,15 +1,19 @@
 <!-- HTML format for the slide panel -->
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
 <link rel="stylesheet" href="{% static 'css/spinner.css' %}">
 <link rel="stylesheet" href="{% static 'css/slidePanel.css' %}">
 <link rel="stylesheet" href="{% static 'css/slidePanelStyles.css' %}">
 <h1>{{ building }}</h1>
-<table>
-  {% for occupancy in occupancies %}
-    <tr>
-      <td>{{ occupancy.room.number }}</td>
-      <td>{{ occupancy.occupancy }} / {{ occupancy.room.capacity }}</td>
-    </tr>
-  {% endfor %}
+<div class="my-wrapper">
+<table id="table">
+{% for occupancy in occupancies %}
+<tr class="tablerow">
+    <td>{{ occupancy.room.number }}</td>
+    <td>{{ occupancy.occupancy }} / {{ occupancy.room.capacity }}</td>
+</tr>
+{% endfor %}
 </table>
+</div>
+<a href="#" class="close">Click to close</a>
