@@ -1,8 +1,9 @@
 // initialize the map
 var map = L.map('map').setView([40.345129502014764, -74.65826869010927], 17);
 
+layers = {}
 // load a tile layer
-L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003n2rs6zu65xd7i/tiles/256/{z}/{x}/{y}?access_token={accessToken}',
+layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003n2rs6zu65xd7i/tiles/256/{z}/{x}/{y}?access_token={accessToken}',
 {
   accessToken:'pk.eyJ1IjoiYm5wcmtzIiwiYSI6ImNqMHVpaHBndjA2NG0zMnFheG5kbG5wa3AifQ.Cypl8hCriRSkA4XF-4GgMQ',
   attribution: 'Tiles by <a href="http://mapc.org">MAPC</a>, Data by <a href="http://mass.gov/mgis">MassGIS</a>',
@@ -20,10 +21,39 @@ function onEachFeature(feature, layer) {
         popupContent += feature.properties.popupContent;
     }
 
-    layer.bindPopup(popupContent);
+    layer.bindPopup(popupContent,{closeButton: false, autoPan: false});
+    layer.on({
+            'mouseover': setHover.bind(layer),
+            'mouseout': removeHover.bind(layer),
+            'popupopen': function(e) {
+                  // var b = layer.getBounds();
+                  // var lat = b.getNorth()
+                  // var lng = b.getCenter().lng
+                  // e.popup.setLatLng([lat, lng])
+            },
+             'click': function(e) {
+                // TODO michael
+            }
+    });
 }
 
-L.geoJSON(places, {
+function setHover(e) {
+    this.openPopup()
+    var layer = e.target;
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+}
+
+function removeHover(e) {
+    map.closePopup();
+    layers.places.resetStyle(e.target);
+}
+
+layers.places = L.geoJSON(places, {
     style: function (feature) {
         return feature.properties && feature.properties.style;
     },
@@ -35,9 +65,9 @@ L.geoJSON(places, {
             radius: 8,
             fillColor: "#ff7800",
             color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8
+            weight: 0.2,
+            opacity: 0.5,
+            fillOpacity: 0.2
         });
     }
 }).addTo(map);
