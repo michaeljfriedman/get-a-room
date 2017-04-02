@@ -19,8 +19,7 @@ layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003
 
 
 function onEachFeature(feature, layer) {
-    var popupContent = "<p>I started out as a GeoJSON " +
-            feature.geometry.type + ", but now I'm a Leaflet vector!</p>";
+    var popupContent = "<p>Click for stats on rooms in this building!</p>";
 
     if (feature.properties && feature.properties.popupContent) {
         popupContent += feature.properties.popupContent;

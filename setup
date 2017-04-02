@@ -36,6 +36,7 @@ source venv/bin/activate
 # Download dependencies
 echo "Downloading dependencies..."
 pip install Django==1.10.6
+pip install selenium==3.3.1
 echo "Done!"
 echo
 

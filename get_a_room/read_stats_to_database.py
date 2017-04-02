@@ -36,6 +36,7 @@ for line in lines:
 # Read stats.txt into database
 stats = open('stats.txt', 'r')
 lines = [line.strip() for line in stats.readlines()]
+now = timezone.now()
 for line in lines:
     fields = line.split()
     building = fields[0].lower()
@@ -46,7 +47,7 @@ for line in lines:
         rooms = Room.objects.filter(building=building, number=room_number)
         room = rooms[0]
         occupancy = Occupancy(
-            timestamp=timezone.now(),
+            timestamp=now,
             room=room,
             occupancy=occupancy
         )
