@@ -9,9 +9,3 @@ def index(request):
     rooms = Room.objects.all()
     occupancies = Occupancy.objects.all()
     return render(request, 'index.html',{})
-
-def map(request):
-    '''
-    Sample view of the map.
-    '''
-    return render(request, 'map.html',{})

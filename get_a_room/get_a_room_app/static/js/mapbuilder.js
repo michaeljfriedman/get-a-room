@@ -1,6 +1,7 @@
 // initialize the map
-var map = L.map('map').setView([40.345129502014764, -74.65826869010927], 17);
-
+var map = L.map('map', {scrollWheelZoom: false}).setView([40.345129502014764, -74.65826869010927], 17);
+map.setMaxZoom(17).setMinZoom(16);
+map.setMaxBounds([[40.33761, -74.67769], [40.350697, -74.64053]]);
 layers = {}
 // load a tile layer
 layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003n2rs6zu65xd7i/tiles/256/{z}/{x}/{y}?access_token={accessToken}',
@@ -25,14 +26,10 @@ function onEachFeature(feature, layer) {
     layer.on({
             'mouseover': setHover.bind(layer),
             'mouseout': removeHover.bind(layer),
-            'popupopen': function(e) {
-                  // var b = layer.getBounds();
-                  // var lat = b.getNorth()
-                  // var lng = b.getCenter().lng
-                  // e.popup.setLatLng([lat, lng])
-            },
              'click': function(e) {
                 // TODO michael
+                map.closePopup();
+                setMapView();
             }
     });
 }
@@ -48,6 +45,10 @@ function setHover(e) {
     });
 }
 
+function setMapView() {
+
+  // TODO michael
+}
 function removeHover(e) {
     map.closePopup();
     layers.places.resetStyle(e.target);
