@@ -1,94 +1,17 @@
+<!DOCTYPE html>
+{% load static %}
 <html>
 <head>
     <title>A Leaflet map!</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script src="{% static 'js/places.js' %}"> </script>
     <style>
         #map{ width: 900px; height: 500px; }
     </style>
 </head>
 <body>
-
-  <div id="map"></div>
-
-  <script>
-
-      // initialize the map
-      var map = L.map('map').setView([40.345129502014764, -74.65826869010927], 17);
-
-      // load a tile layer
-      L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003n2rs6zu65xd7i/tiles/256/{z}/{x}/{y}?access_token={accessToken}',
-        {
-          accessToken:'pk.eyJ1IjoiYm5wcmtzIiwiYSI6ImNqMHVpaHBndjA2NG0zMnFheG5kbG5wa3AifQ.Cypl8hCriRSkA4XF-4GgMQ',
-          attribution: 'Tiles by <a href="http://mapc.org">MAPC</a>, Data by <a href="http://mass.gov/mgis">MassGIS</a>',
-          id: 'bnprks.9754e7af',
-          maxZoom: 17,
-          minZoom: 9
-        }).addTo(map);
-
-        // WARNING [LONGITUTDE,LATITUDE] FORM! IT'S STUPID
-        var places = {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [
-                            -74.66, 40.346
-                        ]
-                    },
-                    "properties": {
-                        "popupContent":"Frist Campus Center"
-                    },
-                    "id": 1
-                },
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [
-                            -74.66, 40.344
-                        ]
-                    },
-                    "properties": {
-                        "popupContent":"Dillon Gym"
-                    },
-                    "id": 2
-                }
-            ]
-        };
-
-        function onEachFeature(feature, layer) {
-            var popupContent = "<p>I started out as a GeoJSON " +
-                    feature.geometry.type + ", but now I'm a Leaflet vector!</p>";
-
-            if (feature.properties && feature.properties.popupContent) {
-                popupContent += feature.properties.popupContent;
-            }
-
-            layer.bindPopup(popupContent);
-        }
-
-        L.geoJSON(places, {
-            style: function (feature) {
-                return feature.properties && feature.properties.style;
-            },
-
-            onEachFeature: onEachFeature,
-
-            pointToLayer: function (feature, latlng) {
-                return L.circleMarker(latlng, {
-                    radius: 8,
-                    fillColor: "#ff7800",
-                    color: "#000",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                });
-            }
-        }).addTo(map);
-
-  </script>
+    <div id="map"></div>
+    <script src="{% static 'js/mapbuilder.js' %}"> </script>
 </body>
 </html>
