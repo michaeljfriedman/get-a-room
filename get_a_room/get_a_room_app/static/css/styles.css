@@ -191,3 +191,7 @@ div.container a.navbar-brand:visited {
 div.container a.navbar-brand:active  {
   color: #FFFFFF;
 }
+
+span.fa.fa-map-marker:before {
+  content: '\f041';
+}

@@ -3,7 +3,10 @@ var map = L.map('map').setView([40.345129502014764, -74.65826869010927], 17);
 map.setMaxZoom(17).setMinZoom(16);
 //map.setMaxBounds([[40.33761, -74.67769], [40.350697, -74.64053]]);
 
-L.control.locate({options:{setView:'untilPan'}}).addTo(map);
+L.control.locate({options:{
+    setView: 'untilPan'
+    icon: 'icon-location'
+    }}).addTo(map);
 // L.Control.extend();
 
 layers = {}
@@ -19,11 +22,8 @@ layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003
 
 
 function onEachFeature(feature, layer) {
-    var popupContent = "<p>Click for stats on rooms in this building!</p>";
+    var popupContent = "<p>Click for stats on rooms in this building!</p> <strong>" + feature.properties.popupContent + "</strong>";
 
-    if (feature.properties && feature.properties.popupContent) {
-        popupContent += feature.properties.popupContent;
-    }
 
     layer.bindPopup(popupContent,{closeButton: false, autoPan: false});
     layer.on({
