@@ -86,7 +86,7 @@ class StatsBuildingViewTests(TestCase):
         # Make the request
         response = self.client.get(reverse('get_a_room_app:stats_building', kwargs={'building': 'frist-campus-center'}))
         try:
-            parsed_response = json.loads(response.content)
+            parsed_response = json.loads(response.content)  # JSON object for one building, formatted as specified in views.py
         except:
             self.fail('JSON response could not be parsed')
 
@@ -129,7 +129,85 @@ class StatsMostRecentViewTests(TestCase):
         least one timestamp in the database, and checks that we get back the
         correctly formatted JSON.
         '''
-        pass
+        # Make several rooms for two buildings
+        frist_rooms = [
+            create_room(number='100'),
+            create_room(number='200'),
+            create_room(number='300')
+        ]
+        for room in frist_rooms:
+            room.save()
+
+        cs_rooms = [
+            create_room(building='Computer Science Building', number='100'),
+            create_room(building='Computer Science Building', number='200'),
+            create_room(building='Computer Science Building', number='300'),
+        ]
+        for room in cs_rooms:
+            room.save()
+
+        # Enter occupancy stats for each room. (All rooms in both buildings have
+        # the same timestamp)
+        now = timezone.now()
+        frist_occupancies = [
+            create_occupancy(timestamp=now, room=frist_rooms[0]),
+            create_occupancy(timestamp=now, room=frist_rooms[1]),
+            create_occupancy(timestamp=now, room=frist_rooms[2])
+        ]
+        for occupancy in frist_occupancies:
+            occupancy.save()
+
+        cs_occupancies = [
+            create_occupancy(timestamp=now, room=cs_rooms[0]),
+            create_occupancy(timestamp=now, room=cs_rooms[1]),
+            create_occupancy(timestamp=now, room=cs_rooms[2])
+        ]
+        for occupancy in cs_occupancies:
+            occupancy.save()
+
+        # Make request
+        response = self.client.get(reverse('get_a_room_app:stats_most_recent'))
+        try:
+            parsed_response = json.loads(response.content) # List of JSON objects, formatted as specified in views.py
+        except:
+            self.fail('JSON response could not be parsed')
+
+        # Verify response is correct
+        for entry in parsed_response:
+            self.assertEqual(sorted(entry.keys()), ['name', 'rooms']) # each entry has correct attributes
+
+        test_buildings = sorted(parsed_response, cmp=lambda x, y: cmp(x['name'], y['name']))
+        self.assertEqual(len(test_buildings), 2)   # has correct number of buildings
+        self.assertEqual([test_buildings[0]['name'], test_buildings[1]['name']],
+            [cs_rooms[0].building, frist_rooms[0].building])  # has correct buildings
+
+        frist_test_vs_actual = (test_buildings[0]['rooms'], frist_occupancies)
+        cs_test_vs_actual = (test_buildings[1]['rooms'], cs_occupancies)
+        for test_occupancies, actual_occupancies in [frist_test_vs_actual, cs_test_vs_actual]:
+            actual_occupancies = sorted(actual_occupancies, cmp=lambda x, y: cmp(x.room.number, y.room.number))
+            test_occupancies = sorted(test_occupancies, cmp=lambda x, y: cmp(x['number'], y['number']))
+            self.assertEqual(len(test_occupancies), len(actual_occupancies))  # has correct number of room entries
+            for i in range(0, len(actual_occupancies)):
+                # Has correct fields in each room entry
+                self.assertEqual(test_occupancies[i]['number'], actual_occupancies[i].room.number)
+                self.assertEqual(test_occupancies[i]['occupancy'], actual_occupancies[i].occupancy)
+                self.assertEqual(test_occupancies[i]['capacity'], actual_occupancies[i].room.capacity)
+
+    def test_stats_most_recent_with_empty_database(self):
+        '''
+        Requests the most recent stats for all buildings when there are no
+        entries in the Occupancy table. Checks that this returns an empty
+        JSON object.
+        '''
+        response = self.client.get(reverse('get_a_room_app:stats_most_recent'))
+        try:
+            parsed_response = json.loads(response.content)
+        except:
+            self.fail('JSON response could not be parsed')
+
+        # Verify response is correct
+        self.assertEqual(parsed_response, {})
+
 
 #-------------------------------------------------------------------------------
 

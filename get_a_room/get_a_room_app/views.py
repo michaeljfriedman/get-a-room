@@ -63,7 +63,10 @@ def stats_most_recent(request):
     formatted in JSON.
     '''
     # Get stats for all buildings
-    most_recent_timestamp = Occupancy.objects.order_by('-timestamp')[0].timestamp
+    occupancies_ordered_by_timestamp = Occupancy.objects.order_by('-timestamp')
+    if len(occupancies_ordered_by_timestamp) == 0:
+        return HttpResponse(json.dumps({}))
+    most_recent_timestamp = occupancies_ordered_by_timestamp[0].timestamp
     all_occupancies = Occupancy.objects.filter(timestamp=most_recent_timestamp)
 
     # Separate them by building
