@@ -1,4 +1,5 @@
 import datetime
+import json
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
@@ -13,7 +14,7 @@ from get_a_room_app.models import Occupancy, Room
 Helper methods for tests. Return a valid Room/Occupancy entries, but do not place them in their corresponding table. i.e. the caller must save() them
 afterwards.
 '''
-def create_room(building='frist-campus-center', number='302', capacity=50):
+def create_room(building='Frist Campus Center', number='302', capacity=50):
     return Room(building=building, number=number, capacity=capacity)
 
 def create_occupancy(timestamp=timezone.now(), room=0, occupancy=25):
@@ -34,26 +35,101 @@ class IndexViewTests(TestCase):
         '''
         pass # TODO: Implement this
 
-class SlidePanelViewTests(TestCase):
+class StatsBuildingViewTests(TestCase):
     '''
-    Tests for retrieving data and populating them into the slide panel.
+    Tests for retrieving stats by building name in JSON format.
     '''
 
-    def test_slide_panel_loads_building_contents(self):
+    def test_stats_building_for_valid_building(self):
         '''
-        Loads the slide panel view and checks that the building stats are
-        in it.
+        Requests the stats for a building that is in the database, and checks
+        that we get back the correctly formatted JSON object. Should only
+        return stats for the most recent timestamp.
         '''
-        # TODO: There is something wrong with this test, but the view itself works. Fix this later
-        # create_occupancy().save()
-        # response = self.client.get(reverse('get_a_room_app:slide-panel', kwargs={'building': 'frist-campus-center'}))
-        # most_recent_timestamp = Occupancy.objects.order_by('-timestamp')[0].timestamp
-        # occupancies = Occupancy.objects.filter(timestamp=most_recent_timestamp, room__building='frist-campus-center')
-        # for occupancy in occupancies:
-        #     self.assertContains(response.content, str(occupancy.room.building))
-        #     self.assertContains(response.content, str(occupancy.room.number))
-        #     self.assertContains(response.content, str(occupancy.occupancy))
-        #     self.assertContains(response.content, str(occupancy.room.capacity))
+        # Make several rooms for two buildings
+        frist_rooms = [
+            create_room(number='100'),
+            create_room(number='200'),
+            create_room(number='300')
+        ]
+        for room in frist_rooms:
+            room.save()
+
+        cs_rooms = [
+            create_room(building='Computer Science Building', number='100'),
+            create_room(building='Computer Science Building', number='200'),
+            create_room(building='Computer Science Building', number='300'),
+        ]
+        for room in cs_rooms:
+            room.save()
+
+        # Enter occupancy stats for each room. Create some stats with older
+        # timestamp. The request should only retrieve the more recent stats.
+        now = timezone.now()
+        frist_occupancies = [
+            create_occupancy(timestamp=now, room=frist_rooms[0]),
+            create_occupancy(timestamp=now, room=frist_rooms[1]),
+            create_occupancy(timestamp=now, room=frist_rooms[2])
+        ]
+        for occupancy in frist_occupancies:
+            occupancy.save()
+
+        before = now - datetime.timedelta(days=1)
+        cs_occupancies = [
+            create_occupancy(timestamp=before, room=cs_rooms[0]),
+            create_occupancy(timestamp=before, room=cs_rooms[1]),
+            create_occupancy(timestamp=before, room=cs_rooms[2])
+        ]
+        for occupancy in cs_occupancies:
+            occupancy.save()
+
+        # Make the request
+        response = self.client.get(reverse('get_a_room_app:stats_building', kwargs={'building': 'frist-campus-center'}))
+        try:
+            parsed_response = json.loads(response.content)
+        except:
+            self.fail('JSON response could not be parsed')
+
+        # Verify response is correct
+        self.assertEqual(sorted(parsed_response.keys()), ['name', 'rooms'])  # has correct attributes
+        self.assertEqual(parsed_response['name'], frist_rooms[0].building)   # has correct building name
+
+        frist_occupancies = sorted(frist_occupancies, cmp=lambda x, y: cmp(x.room.number, y.room.number))
+        test_occupancies = sorted(parsed_response['rooms'], cmp=lambda x, y: cmp(x['number'], y['number']))
+        self.assertEqual(len(test_occupancies), len(frist_occupancies))  # has correct number of entries
+        for i in range(0, len(frist_occupancies)):
+            # Has correct fields in each entry
+            self.assertEqual(test_occupancies[i]['number'], frist_occupancies[i].room.number)
+            self.assertEqual(test_occupancies[i]['occupancy'], frist_occupancies[i].occupancy)
+            self.assertEqual(test_occupancies[i]['capacity'], frist_occupancies[i].room.capacity)
+
+    def test_stats_building_for_nonexistent_building(self):
+        '''
+        Requests the stats for a building that does not exist in the database,
+        and checks that we get back an empty JSON object.
+        '''
+        response = self.client.get(reverse('get_a_room_app:stats_building', kwargs={'building': 'white-house'}))
+        try:
+            parsed_response = json.loads(response.content)
+        except:
+            self.fail('JSON response could not be parsed')
+
+        # Verify response is correct
+        self.assertEqual(parsed_response, {})
+
+
+class StatsMostRecentViewTests(TestCase):
+    '''
+    Tests for retrieving stats by most recent timestamp.
+    '''
+
+    def test_stats_most_recent_valid(self):
+        '''
+        Requests the most recent stats for all buildings when there is at
+        least one timestamp in the database, and checks that we get back the
+        correctly formatted JSON.
+        '''
+        pass
 
 #-------------------------------------------------------------------------------
 
