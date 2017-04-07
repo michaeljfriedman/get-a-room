@@ -53,7 +53,7 @@ if populate:
     print 'Populating rooms...'
     for num in nums:
         room = Room(
-            building='frist-campus-center',
+            building='Frist Campus Center',
             number=int(num),
             capacity=randint(50, 100)
         )

@@ -6,7 +6,6 @@
 # to translate access points (APs) into room numbers.
 #
 # NOTE: We only have the translation for rooms in Frist as of now.
-
 #-------------------------------------------------------------------------------
 
 # Some setup before we can interact with Django
@@ -39,7 +38,7 @@ lines = [line.strip() for line in stats.readlines()]
 now = timezone.now()
 for line in lines:
     fields = line.split()
-    building = fields[0].lower()
+    building = ' '.join(fields[0].split('-'))
     ap = fields[1]
     occupancy = int(fields[2])
     room_number = rooms_by_aps[ap]

@@ -4,8 +4,8 @@ map.setMaxZoom(17).setMinZoom(16);
 //map.setMaxBounds([[40.33761, -74.67769], [40.350697, -74.64053]]);
 
 L.control.locate({options:{
-    setView: 'untilPan'
-    icon: 'icon-location'
+    setView: 'untilPan',
+    icon: 'icon-location',
     }}).addTo(map);
 // L.Control.extend();
 
@@ -56,21 +56,48 @@ function setMapView(building) {
         return target.split(search).join(replacement);
     };
     // map.removeLayer(layers.tiles).removeLayer(layers.places);
-    $.slidePanel.show({
-        url: 'http://localhost:8000/slide-panel/' + building.replaceAll(' ', '-').toLowerCase(),
-        settings: {
-            method: 'GET'
-        }
-    }, {
-        direction: 'right',
-        closeSelector: '.close',
-        useCssTransforms3d: true,
-        useCssTransforms: true,
-        useCssTransitions: true,
-        loading: {
-            template: function(options) {
-                return '<div class="' + options.classes.loading + '"><div class="spinner"></div></div>';
+
+    // Make AJAX request to get building stats
+    $.ajax({
+        url: 'http://localhost:8000/stats/building/' + building.replaceAll(' ', '-').toLowerCase(),
+        success: function(result) {
+            // Parse JSON response and populate view
+            var buildingStats = JSON.parse(result);
+            var content = '';  // default to empty content
+            if (!jQuery.isEmptyObject(buildingStats)) {
+                var content =  // this is a **horrible** way to populate the view, but I don't know how else to do it!
+                    `<h1>` + buildingStats.name + `</h1>
+                    <div class="my-wrapper">
+                    <table id="table">`;
+                for (i = 0; i < buildingStats.rooms.length; i++) {
+                    var room = buildingStats.rooms[i];
+                    content +=
+                        `<tr class="tablerow">
+                        <td>` + room.number + `</td>
+                        <td>` + room.occupancy + ` / ` + room.capacity + `</td>
+                        </tr>`
+                }
+                content +=
+                    `</table>
+                    </div>
+                    <a href="#" class="close">Click to close</a>`;
             }
+
+            // Slide out the panel with the content
+            $.slidePanel.show({
+                content: content
+            }, {
+                direction: 'right',
+                closeSelector: '.close',
+                useCssTransforms3d: true,
+                useCssTransforms: true,
+                useCssTransitions: true,
+                loading: {
+                    template: function(options) {
+                        return '<div class="' + options.classes.loading + '"><div class="spinner"></div></div>';
+                    }
+                }
+            });
         }
     });
 }
