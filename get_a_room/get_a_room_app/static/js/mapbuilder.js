@@ -20,7 +20,6 @@ layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003
   minZoom: 9
 }).addTo(map);
 
-
 function onEachFeature(feature, layer) {
     var popupContent = "<p>Click for stats on rooms in this building!</p> <strong>" + feature.properties.popupContent + "</strong>";
 
@@ -32,7 +31,7 @@ function onEachFeature(feature, layer) {
              'click': function(e) {
                 map.closePopup();
                 var building = feature.properties.popupContent;
-                setMapView(building);
+                openSidePanel(building);
                 // map.addLayer(layers.tiles).addLayer(layers.places);
             }
     });
@@ -48,7 +47,9 @@ function setHover(e) {
         fillOpacity: 0.7
     });
 }
-function setMapView(building) {
+
+// Loads stats for 'building', and opens the side panel with those stats
+function openSidePanel(building) {
     // Helper function for replacing all occurrences of spaces with hyphens
     // in building name
     String.prototype.replaceAll = function(search, replacement) {
@@ -63,44 +64,40 @@ function setMapView(building) {
         success: function(result) {
             // Parse JSON response and populate view
             var buildingStats = JSON.parse(result);
-            var content = '';  // default to empty content
             if (!jQuery.isEmptyObject(buildingStats)) {
-                var content =  // this is a **horrible** way to populate the view, but I don't know how else to do it!
-                    `<h1>` + buildingStats.name + `</h1>
-                    <div class="my-wrapper">
-                    <table id="table">`;
+                $('#building-name').text(buildingStats.name);
                 for (i = 0; i < buildingStats.rooms.length; i++) {
+                    // Make row for this room's stats
                     var room = buildingStats.rooms[i];
-                    content +=
-                        `<tr class="tablerow">
-                        <td>` + room.number + `</td>
-                        <td>` + room.occupancy + ` / ` + room.capacity + `</td>
-                        </tr>`
+                    $('table#building-stats').append('<tr id="building-stats-row' + i + '"></tr>');
+                    $('tr#building-stats-row' + i).append('<td id="building-stats-room-number' + i + '"></td>');
+                    $('tr#building-stats-row' + i).append('<td id="building-stats-room-occupancy' + i + '"></td>');
+
+                    // Populate row with data
+                    $('td#building-stats-room-number' + i).text(room.number);
+                    $('td#building-stats-room-occupancy' + i).text(room.occupancy + ' / ' + room.capacity);
                 }
-                content +=
-                    `</table>
-                    </div>
-                    <a href="#" class="close">Click to close</a>`;
+            } else {
+                // Show error message in side panel instead of room data
+                $('#building-name').text('Oops!');
+                $('#building-stats-error-message').text('We couldn\'t find stats for this room!');
             }
 
             // Slide out the panel with the content
-            $.slidePanel.show({
-                content: content
-            }, {
-                direction: 'right',
-                closeSelector: '.close',
-                useCssTransforms3d: true,
-                useCssTransforms: true,
-                useCssTransitions: true,
-                loading: {
-                    template: function(options) {
-                        return '<div class="' + options.classes.loading + '"><div class="spinner"></div></div>';
-                    }
-                }
-            });
+            $('#side-panel').slideDown(250);
         }
     });
 }
+
+// Closes the side panel
+function closeSidePanel() {
+    $('#side-panel').slideUp(250);
+
+    // Clear contents
+    $('table#building-stats').html('');
+    $('#building-stats-error-message').text('');
+}
+
 function removeHover(e) {
     map.closePopup();
     layers.places.resetStyle(e.target);
@@ -124,3 +121,10 @@ layers.places = L.geoJSON(places, {
         });
     }
 }).addTo(map);
+
+/*----------------------------------------------------------------------------*/
+
+$(document).ready(function() {
+    // Set click listener on 'close' button of the side panel
+    $('#close-side-panel').click(closeSidePanel);
+});

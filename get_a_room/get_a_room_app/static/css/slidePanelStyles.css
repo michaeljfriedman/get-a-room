@@ -1,23 +1,44 @@
 /* slidePanelSytles.css
  * Author: Michael Friedman
  *
- * Our custom styles applied to the slide panel
+ * Our custom styles applied to the side panel
  */
 
-/* Applied once panel has loaded */
-.slidePanel {
-  padding-top: 50px;
-  color: #000000;
-  background-color: #FFFFFF;
-  padding-left: 20px;
-  padding-right: 20px;
+@media (min-width: 992px) {
+  #side-panel {
+    margin-top: -19px;
+  }
 }
 
-table {
+@media (max-width: 991px) {
+  #side-panel {
+    margin-top: -39px;
+  }
+}
+
+#side-panel {
+  height: auto;
+  color: #000000;
+  background-color: #FFFFFF;
+  z-index: 99;
+  display: none;
+}
+
+#building-stats-container {
+  overflow: auto;
+  height: 100%;
+}
+
+table#building-stats {
   width: 100%;
 }
 
-.my-wrapper {
-  overflow: auto;
-  height: 500px;
+a#close-side-panel {
+  float: right;
+  text-decoration: none;
+  color: #888888;
+}
+
+a#close-side-panel:hover {
+  color: #111111;
 }
