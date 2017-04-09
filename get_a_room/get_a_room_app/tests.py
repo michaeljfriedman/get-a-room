@@ -4,17 +4,24 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from get_a_room_app.models import Occupancy, Room
+from get_a_room_app.models import Building, Occupancy, Room
 
 #-------------------------------------------------------------------------------
 
 ### View tests
 
 '''
-Helper methods for tests. Return a valid Room/Occupancy entries, but do not place them in their corresponding table. i.e. the caller must save() them
+Helper methods for tests. Return a valid Building/Room/Occupancy entries, but do
+not place them in their corresponding table. i.e. the caller must save() them
 afterwards.
 '''
-def create_room(building='Frist Campus Center', number='302', capacity=50):
+def create_building(name, lat=0.0, lng=0.0):
+    return Building(name=name, lat=lat, lng=lng)
+
+def create_room(building=0, number='302', capacity=50):
+    if building == 0:
+        building = create_building('Frist Campus Center')
+        building.save()
     return Room(building=building, number=number, capacity=capacity)
 
 def create_occupancy(timestamp=timezone.now(), room=0, occupancy=25):
@@ -47,18 +54,23 @@ class StatsBuildingViewTests(TestCase):
         return stats for the most recent timestamp.
         '''
         # Make several rooms for two buildings
+        frist_building = create_building('Frist Campus Center')
+        frist_building.save()
+        cs_building = create_building('Computer Science Building')
+        cs_building.save()
+
         frist_rooms = [
-            create_room(number='100'),
-            create_room(number='200'),
-            create_room(number='300')
+            create_room(building=frist_building, number='100'),
+            create_room(building=frist_building, number='200'),
+            create_room(building=frist_building, number='300')
         ]
         for room in frist_rooms:
             room.save()
 
         cs_rooms = [
-            create_room(building='Computer Science Building', number='100'),
-            create_room(building='Computer Science Building', number='200'),
-            create_room(building='Computer Science Building', number='300'),
+            create_room(building=cs_building, number='100'),
+            create_room(building=cs_building, number='200'),
+            create_room(building=cs_building, number='300'),
         ]
         for room in cs_rooms:
             room.save()
@@ -91,8 +103,8 @@ class StatsBuildingViewTests(TestCase):
             self.fail('JSON response could not be parsed')
 
         # Verify response is correct
-        self.assertEqual(sorted(parsed_response.keys()), ['name', 'rooms'])  # has correct attributes
-        self.assertEqual(parsed_response['name'], frist_rooms[0].building)   # has correct building name
+        self.assertEqual(sorted(parsed_response.keys()), ['lat', 'lng', 'name', 'rooms'])  # has correct attributes
+        self.assertEqual(parsed_response['name'], frist_rooms[0].building.name)            # has correct building name
 
         frist_occupancies = sorted(frist_occupancies, cmp=lambda x, y: cmp(x.room.number, y.room.number))
         test_occupancies = sorted(parsed_response['rooms'], cmp=lambda x, y: cmp(x['number'], y['number']))
@@ -130,18 +142,23 @@ class StatsMostRecentViewTests(TestCase):
         correctly formatted JSON.
         '''
         # Make several rooms for two buildings
+        frist_building = create_building('Frist Campus Center')
+        frist_building.save()
+        cs_building = create_building('Computer Science Building')
+        cs_building.save()
+
         frist_rooms = [
-            create_room(number='100'),
-            create_room(number='200'),
-            create_room(number='300')
+            create_room(building=frist_building, number='100'),
+            create_room(building=frist_building, number='200'),
+            create_room(building=frist_building, number='300')
         ]
         for room in frist_rooms:
             room.save()
 
         cs_rooms = [
-            create_room(building='Computer Science Building', number='100'),
-            create_room(building='Computer Science Building', number='200'),
-            create_room(building='Computer Science Building', number='300'),
+            create_room(building=cs_building, number='100'),
+            create_room(building=cs_building, number='200'),
+            create_room(building=cs_building, number='300'),
         ]
         for room in cs_rooms:
             room.save()
@@ -174,12 +191,12 @@ class StatsMostRecentViewTests(TestCase):
 
         # Verify response is correct
         for entry in parsed_response:
-            self.assertEqual(sorted(entry.keys()), ['name', 'rooms']) # each entry has correct attributes
+            self.assertEqual(sorted(entry.keys()), ['lat', 'lng', 'name', 'rooms']) # each entry has correct attributes
 
         test_buildings = sorted(parsed_response, cmp=lambda x, y: cmp(x['name'], y['name']))
         self.assertEqual(len(test_buildings), 2)   # has correct number of buildings
         self.assertEqual([test_buildings[0]['name'], test_buildings[1]['name']],
-            [cs_rooms[0].building, frist_rooms[0].building])  # has correct buildings
+            [cs_rooms[0].building.name, frist_rooms[0].building.name])  # has correct buildings
 
         frist_test_vs_actual = (test_buildings[0]['rooms'], frist_occupancies)
         cs_test_vs_actual = (test_buildings[1]['rooms'], cs_occupancies)
@@ -212,6 +229,58 @@ class StatsMostRecentViewTests(TestCase):
 #-------------------------------------------------------------------------------
 
 ### Database tests
+
+class BuildingModelTests(TestCase):
+    '''
+    Tests that we can put/get things into/from the Building table, and that
+    it only accepts valid entries.
+    '''
+
+    def test_insert_with_valid_entry(self):
+        '''
+        Inserts an entry into the table, gets it out, and checks that its
+        attributes are correct.
+        '''
+        building = create_building('White House')
+        building.save()
+
+        test_building = Building.objects.order_by('-id')[0]
+        self.assertEqual(test_building, building)
+
+    def test_insert_with_no_name(self):
+        '''
+        Inserts an entry with an empty name into the table, and checks that
+        it fails to insert.
+        '''
+        building = create_building(None)
+        self.assertRaises(IntegrityError, building.save)
+
+    def test_insert_with_no_latitude(self):
+        '''
+        Inserts an entry with an empty latitude into the table, and checks that
+        it fails to insert.
+        '''
+        building = create_building('White House', lat=None)
+        self.assertRaises(IntegrityError, building.save)
+
+    def test_insert_with_no_longitude(self):
+        '''
+        Inserts an entry with an empty longitude into the table, and checks that
+        it fails to insert.
+        '''
+        building = create_building('White House', lng=None)
+        self.assertRaises(IntegrityError, building.save)
+
+    def test_unique_names(self):
+        '''
+        Inserts two entries with the same name into the table, and checks that
+        the second one fails to insert.
+        '''
+        building1 = Building(name='White House', lat=0.0, lng=0.0)
+        building1.save()
+
+        building2 = Building(name='White House', lat=90.0, lng=180.0)
+        self.assertRaises(IntegrityError, building2.save)
 
 class RoomModelTests(TestCase):
     '''

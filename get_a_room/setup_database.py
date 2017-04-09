@@ -39,23 +39,50 @@ os.system('python manage.py makemigrations get_a_room_app')
 os.system('python manage.py migrate')
 print 'Done!'
 
-# Populate database with sample contents
+# Populate database with most recent stats from all buildings
 if populate:
-    print 'Populating database with sample data...'
-    from get_a_room_app.models import Occupancy, Room
+    print 'Populating database with most recent stats from all buildings...'
+    import json
+    from django.db import IntegrityError
+    from get_a_room_app.models import Building, Occupancy, Room
     from random import randint
 
+    # Populate buildings
+    print 'Populating buildings...'
+    f = open('locations.json', 'r')
+    buildings = json.loads(f.read())
+    for building in buildings:
+        try:
+            Building(
+                name=building['name'],
+                lat=float(building['lat']),
+                lng=float(building['lng'])
+            ).save()
+        except IntegrityError as e:
+            print >> sys.stderr, 'Duplicate building %s: not entered' % building['name']
+    f.close()
+    print 'Done!'
+    print
+
+    # Populate rooms
+    # TODO: For now, ap-to-room.txt only maps rooms in Frist. Need to add a mapping for rooms in all other buildings.
+    print 'Populating rooms...'
     f = open('ap-to-room.txt', 'r')
     lines = [line.strip() for line in f.readlines()]
     nums = [line.split()[1] for line in lines]
-    print nums
-    print
-    print 'Populating rooms...'
     for num in nums:
-        room = Room(
-            building='Frist Campus Center',
+        building = Building.objects.get(name='Frist Campus Center')
+        Room(
+            building=building,
             number=int(num),
             capacity=randint(50, 100)
-        )
-        room.save()
+        ).save()
+    f.close()
+    print 'Done!'
+    print
+
+    # Get most recent stats and put them into database
+    print 'Populating most recent stats'
+    # os.system('./update_stats')  # TODO: Fix this
+    os.system('python read_stats_to_database.py')
     print 'Done!'

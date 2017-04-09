@@ -18,6 +18,8 @@ def format_building_stats(occupancies):
     entries from the same building. Returns a dict of the form:
     {
         'name': 'Frist Campus Center',
+        'lat': '12.3456789',
+        'lng': '12.3456789',
         'rooms': [
             {'number': '123A', 'occupancy': 25, 'capacity': 50},
             ...
@@ -25,8 +27,10 @@ def format_building_stats(occupancies):
     }
     which can then by jsonified
     '''
-    building = occupancies[0].room.building
-    stats = {'name': building, 'rooms': []}
+    building = occupancies[0].room.building.name
+    lat = str(occupancies[0].room.building.lat)
+    lng = str(occupancies[0].room.building.lng)
+    stats = {'name': building, 'lat': lat, 'lng': lng, 'rooms': []}
     for occupancy in occupancies:
         stats['rooms'].append({
             'number': occupancy.room.number,
@@ -50,7 +54,7 @@ def stats_building(request, building):
     if len(occupancies_ordered_by_timestamp) == 0:
         return HttpResponse(json.dumps({}))
     most_recent_timestamp = occupancies_ordered_by_timestamp[0].timestamp
-    occupancies = Occupancy.objects.filter(timestamp=most_recent_timestamp, room__building=building)
+    occupancies = Occupancy.objects.filter(timestamp=most_recent_timestamp, room__building__name=building)
 
     if len(occupancies) == 0:
         return HttpResponse(json.dumps({}))
@@ -72,14 +76,15 @@ def stats_most_recent(request):
     # Separate them by building
     occupancies_by_buildings = defaultdict(lambda: [])
     for occupancy in all_occupancies:
-        building = occupancy.room.building
-        occupancies_by_buildings[building].append(occupancy)
+        building_name = occupancy.room.building.name
+        occupancies_by_buildings[building_name].append(occupancy)
 
     # Format into a jsonify-able list of dicts
     stats = []
     for _, occupancies in occupancies_by_buildings.iteritems():
         stats.append(format_building_stats(occupancies))
 
+    stats = sorted(stats, cmp=lambda x, y: cmp(x['name'], y['name']))
     return HttpResponse(json.dumps(stats))
 
 

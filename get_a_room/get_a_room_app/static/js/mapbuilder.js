@@ -1,4 +1,14 @@
-// initialize the map
+// Domain name for AJAX requests
+var DOMAIN = 'http://localhost:8000/';
+
+// Helper function for replacing all occurrences of spaces with hyphens
+// in building name
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.split(search).join(replacement);
+};
+
+// Initialize the map
 var map = L.map('map').setView([40.345129502014764, -74.65826869010927], 17);
 map.setMaxZoom(17).setMinZoom(16);
 //map.setMaxBounds([[40.33761, -74.67769], [40.350697, -74.64053]]);
@@ -19,6 +29,53 @@ layers.tiles = L.tileLayer('https://api.mapbox.com/styles/v1/bnprks/cizxah1p6003
   maxZoom: 17,
   minZoom: 9
 }).addTo(map);
+
+/*----------------------------------------------------------------------------*/
+
+// Pull locations and their GPS coordinates from the database, store in 'places'
+
+    var places = {
+        "type": "FeatureCollection",
+        "features": []
+    };
+
+    $.ajax({
+        url: DOMAIN + 'stats/most-recent',
+        async: false,
+        success: function(result) {
+            // Parse JSON response and fill in places.features with building names,
+            // GPS coordinates, and room occupancy stats.
+            var buildingStats = JSON.parse(result);
+            for (i = 0; i < buildingStats.length; i++) {
+                // Each feature has mostly standard parameters. We set 'coordinates'
+                // (GPS coordinates), 'popupContent' (text that appears in a
+                // popup window), 'extra' (extra parameters that we can customize),
+                // and 'id' (which just needs to be a unique integer).
+               places.features.push({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        // NOTE: The format for the coordinates is LONGITUDE, LATITUDE
+                        // (backwards from the norm). This is DUMB! But ugh such is life.
+                        parseFloat(buildingStats[i].lng), parseFloat(buildingStats[i].lat)
+                    ]
+                },
+                "properties": {
+                    "popupContent": buildingStats[i].name,
+                    "extra": {
+                        "rooms": buildingStats[i].rooms // list of rooms with occupancy stats
+                    }
+                },
+                "id": i
+            });
+           }
+       }
+   });
+
+/*----------------------------------------------------------------------------*/
+
+// Create and define behavior of markers
 
 function onEachFeature(feature, layer) {
     var popupContent = "<p>Click for stats on rooms in this building!</p> <strong>" + feature.properties.popupContent + "</strong>";
@@ -50,17 +107,11 @@ function setHover(e) {
 
 // Loads stats for 'building', and opens the side panel with those stats
 function openSidePanel(building) {
-    // Helper function for replacing all occurrences of spaces with hyphens
-    // in building name
-    String.prototype.replaceAll = function(search, replacement) {
-        var target = this;
-        return target.split(search).join(replacement);
-    };
     // map.removeLayer(layers.tiles).removeLayer(layers.places);
 
     // Make AJAX request to get building stats
     $.ajax({
-        url: 'http://localhost:8000/stats/building/' + building.replaceAll(' ', '-').toLowerCase(),
+        url: DOMAIN + 'stats/building/' + building.replaceAll(' ', '-').toLowerCase(),
         success: function(result) {
             // Parse JSON response and populate view
             var buildingStats = JSON.parse(result);
@@ -111,13 +162,32 @@ layers.places = L.geoJSON(places, {
     onEachFeature: onEachFeature,
 
     pointToLayer: function (feature, latlng) {
+        var rooms = feature.properties.extra.rooms;
+
+        // Set marker fill color based on occupancy of the rooms
+        var FILLCOLOR;
+        var numRoomsOpen = 0;
+        var totalRooms = rooms.length;
+        for (i = 0; i < totalRooms; i++) {
+            if (rooms[i].occupancy / rooms[i].capacity < 0.8) {
+                numRoomsOpen++;
+            }
+        }
+        var ratio = numRoomsOpen / totalRooms;
+        if (ratio >= 0.5)
+            FILLCOLOR = '#36ce4c'; // green
+        else if (0.0 < ratio && ratio < 0.5)
+            FILLCOLOR = '#fec041'; // yellow
+        else
+            FILLCOLOR = '#fc635d'; // red
+
         return L.circleMarker(latlng, {
             radius: 8,
-            fillColor: "#ff7800",
-            color: "#000",
+            fillColor: FILLCOLOR,
+            color: '#000',
             weight: 0.2,
             opacity: 0.5,
-            fillOpacity: 0.2
+            fillOpacity: 0.3
         });
     }
 }).addTo(map);

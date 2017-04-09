@@ -43,8 +43,7 @@ for line in lines:
     occupancy = int(fields[2])
     room_number = rooms_by_aps[ap]
     if room_number:
-        rooms = Room.objects.filter(building=building, number=room_number)
-        room = rooms[0]
+        room = Room.objects.get(building__name=building, number=room_number)
         occupancy = Occupancy(
             timestamp=now,
             room=room,
